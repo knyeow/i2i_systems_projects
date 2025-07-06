@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Akka Actor System Visualizer</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; background: #f0f0f0; }
+  h1 { margin-bottom: 10px; }
+  #status { display: flex; gap: 15px; margin-bottom: 20px; }
+  .actor-box {
+    background: white; padding: 15px; border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1); width: 140px; text-align: center;
+  }
+  .alive { color: green; font-weight: bold; }
+  .dead { color: red; font-weight: bold; }
+  #logs { background: #222; color: #eee; height: 200px; overflow-y: scroll; padding: 10px; border-radius: 8px; }
+  #taskForm { margin-top: 20px; }
+  #taskForm input[type="text"] { padding: 8px; width: 250px; }
+  #taskForm button { padding: 8px 12px; margin-left: 8px; }
+</style>
+</head>
+<body>
+
+<h1>Akka Actor System Visualizer</h1>
+
+<div id="status">
+  <div class="actor-box" id="supervisor">
+    <h3>Supervisor</h3>
+    <div class="state">Loading...</div>
+      <div class="history" style="margin-top:8px; font-size: 0.8em; max-height: 80px; overflow-y: auto; background:#eee; padding:4px; border-radius:4px;"></div>
+
+  </div>
+  <div class="actor-box" id="manager">
+    <h3>Manager</h3>
+    <div class="state">Loading...</div>
+      <div class="history" style="margin-top:8px; font-size: 0.8em; max-height: 80px; overflow-y: auto; background:#eee; padding:4px; border-radius:4px;"></div>
+
+  </div>
+  <div class="actor-box" id="worker">
+    <h3>Worker</h3>
+    <div class="state">Loading...</div>
+      <div class="history" style="margin-top:8px; font-size: 0.8em; max-height: 80px; overflow-y: auto; background:#eee; padding:4px; border-radius:4px;"></div>
+
+  </div>
+  <div class="actor-box" id="logger">
+    <h3>Logger</h3>
+    <div class="state">Loading...</div>
+      <div class="history" style="margin-top:8px; font-size: 0.8em; max-height: 80px; overflow-y: auto; background:#eee; padding:4px; border-radius:4px;"></div>
+
+  </div>
+  <div class="actor-box" id="monitor">
+    <h3>Monitor</h3>
+    <div class="state">Loading...</div>
+      <div class="history" style="margin-top:8px; font-size: 0.8em; max-height: 80px; overflow-y: auto; background:#eee; padding:4px; border-radius:4px;"></div>
+
+  </div>
+</div>
+
+
+<h2>Send Task</h2>
+<form id="taskForm">
+  <button type="submit">Send Task</button>
+</form>
+
+<script>
+  const apiBase = 'http://localhost:5009';
+
+    async function fetchStatus() {
+    try {
+        const res = await fetch(apiBase + '/api/actor/status');
+        const data = await res.json();
+
+        ['supervisor', 'manager', 'worker', 'logger', 'monitor'].forEach(name => {
+        const box = document.getElementById(name);
+        const stateEl = box.querySelector('.state');
+        const historyEl = box.querySelector('.history');
+
+        if (data[name]) {
+            stateEl.textContent = data[name].alive ? 'Alive' : 'Dead';
+            stateEl.className = 'state ' + (data[name].alive ? 'alive' : 'dead');
+
+            // History'yi göster
+            if (data[name].history && data[name].history.length > 0) {
+            historyEl.innerHTML = data[name].history
+                .map(msg => `<div>${msg}</div>`)
+                .join('');
+            } else {
+            historyEl.textContent = 'No history';
+            }
+        } else {
+            stateEl.textContent = 'Unknown';
+            stateEl.className = 'state dead';
+            historyEl.textContent = '';
+        }
+        });
+    } catch (e) {
+        console.error('Error fetching status', e);
+    }
+    }
+
+
+
+  document.getElementById('taskForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    try {
+      const res = await fetch(apiBase + '/api/actor/task', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+    } catch (e) {
+      alert('Error sending task');
+      console.error(e);
+    }
+  });
+
+  setInterval(fetchStatus, 3000);
+  fetchStatus();
+</script>
+
+</body>
+</html>
