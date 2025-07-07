@@ -59,7 +59,7 @@ namespace AkkaActorSystemWebApi.Actors
             var resolver = DependencyResolver.For(Context.System);
             _logger = Context.ActorOf(resolver.Props<LoggerActor>(), "logger");
              _store.AddHistory("supervisor", "New  logger created");
-
+            _logger.Tell(new LogMessage("logla"));
             Context.Watch(_logger);
             _store.UpdateStatus("logger", true);
         }
